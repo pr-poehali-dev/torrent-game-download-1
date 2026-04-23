@@ -48,6 +48,7 @@ def handler(event: dict, context) -> dict:
         description = body.get("description", "").strip()
         tags = body.get("tags", [])
         color = body.get("color", "#c8a96e")
+        download_url = body.get("download_url", "").strip()
 
         if not title or not genre:
             return {"statusCode": 400, "headers": cors, "body": {"error": "title and genre required"}}
@@ -55,9 +56,9 @@ def handler(event: dict, context) -> dict:
         conn = get_conn()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
-            f"""INSERT INTO {SCHEMA}.games (title, genre, year, rating, description, tags, color)
-                VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING *""",
-            (title, genre, year, rating, description, tags, color)
+            f"""INSERT INTO {SCHEMA}.games (title, genre, year, rating, description, tags, color, download_url)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING *""",
+            (title, genre, year, rating, description, tags, color, download_url)
         )
         game = dict(cur.fetchone())
         game["tags"] = list(game["tags"]) if game["tags"] else []

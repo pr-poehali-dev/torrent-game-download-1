@@ -29,6 +29,7 @@ const empty = {
   description: "",
   tags: "",
   color: "#c8a96e",
+  download_url: "",
 };
 
 export default function Admin() {
@@ -203,6 +204,18 @@ export default function Admin() {
                   value={form.tags}
                   onChange={(e) => setForm({ ...form, tags: e.target.value })}
                   placeholder="Открытый мир, Фэнтези, RPG"
+                  className="w-full bg-background border border-border rounded-sm px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">
+                  Ссылка на скачивание
+                </label>
+                <input
+                  value={form.download_url}
+                  onChange={(e) => setForm({ ...form, download_url: e.target.value })}
+                  placeholder="https://example.com/game.torrent"
                   className="w-full bg-background border border-border rounded-sm px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
                 />
               </div>

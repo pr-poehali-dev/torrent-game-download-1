@@ -25,6 +25,7 @@ interface Game {
   description: string;
   tags: string[];
   color: string;
+  download_url?: string;
 }
 
 export default function Index() {
@@ -257,9 +258,20 @@ function GameCard({ game, index }: { game: Game; index: number }) {
 
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground text-xs">{game.year}</span>
-          <button className="flex items-center gap-2 text-sm font-display font-medium tracking-wide uppercase text-primary hover:text-primary/80 transition-colors">
-            Подробнее <Icon name="ArrowRight" size={14} />
-          </button>
+          {game.download_url ? (
+            <a
+              href={game.download_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm font-display font-medium tracking-wide uppercase text-primary hover:text-primary/80 transition-colors"
+            >
+              Скачать <Icon name="Download" size={14} />
+            </a>
+          ) : (
+            <span className="text-xs text-muted-foreground/40 font-display uppercase tracking-wide">
+              Ссылка не указана
+            </span>
+          )}
         </div>
       </div>
     </div>
