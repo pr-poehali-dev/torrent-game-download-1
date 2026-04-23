@@ -1,100 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 
-const GENRES = ["Все", "Экшн", "RPG", "Стратегия", "Инди", "Спорт", "Симулятор", "Хоррор"];
+const API = "https://functions.poehali.dev/d4957e15-6951-465d-bea2-b26839c9ccf8";
 
-const GAMES = [
-  {
-    id: 1,
-    title: "Elden Ring",
-    genre: "RPG",
-    year: 2022,
-    rating: 9.8,
-    description: "Открытый мир, созданный Хидетакой Миядзаки и Джорджем Мартином.",
-    tags: ["Соулслайк", "Открытый мир", "Фэнтези"],
-    color: "#c8a96e",
-  },
-  {
-    id: 2,
-    title: "Cyberpunk 2077",
-    genre: "Экшн",
-    year: 2020,
-    rating: 8.4,
-    description: "Открытый мир в мегаполисе будущего. Будьте кем хотите.",
-    tags: ["Киберпанк", "RPG", "Открытый мир"],
-    color: "#f7e040",
-  },
-  {
-    id: 3,
-    title: "Hollow Knight",
-    genre: "Инди",
-    year: 2017,
-    rating: 9.5,
-    description: "Атмосферный метроидвания в подземном мире насекомых.",
-    tags: ["Метроидвания", "Платформер", "Тёмная тема"],
-    color: "#a68dff",
-  },
-  {
-    id: 4,
-    title: "Civilization VI",
-    genre: "Стратегия",
-    year: 2016,
-    rating: 8.9,
-    description: "Постройте цивилизацию, которая выдержит испытание временем.",
-    tags: ["Пошаговая", "4X", "История"],
-    color: "#5dbf7f",
-  },
-  {
-    id: 5,
-    title: "Resident Evil 4",
-    genre: "Хоррор",
-    year: 2023,
-    rating: 9.3,
-    description: "Переосмысление культовой игры в жанре survival-horror.",
-    tags: ["Выживание", "Экшн", "Атмосфера"],
-    color: "#e05050",
-  },
-  {
-    id: 6,
-    title: "Flight Simulator",
-    genre: "Симулятор",
-    year: 2020,
-    rating: 9.1,
-    description: "Весь мир в деталях — летайте куда угодно.",
-    tags: ["Авиация", "Реализм", "Открытый мир"],
-    color: "#40b0f7",
-  },
-  {
-    id: 7,
-    title: "FIFA 24",
-    genre: "Спорт",
-    year: 2023,
-    rating: 7.8,
-    description: "Лучший футбольный симулятор с реальными игроками.",
-    tags: ["Футбол", "Мультиплеер", "Карьера"],
-    color: "#00c853",
-  },
-  {
-    id: 8,
-    title: "Hades",
-    genre: "Инди",
-    year: 2020,
-    rating: 9.6,
-    description: "Рогалик, в котором смерть — это часть истории.",
-    tags: ["Рогалик", "Экшн", "Мифология"],
-    color: "#ff6b6b",
-  },
-  {
-    id: 9,
-    title: "The Witcher 3",
-    genre: "RPG",
-    year: 2015,
-    rating: 9.7,
-    description: "Один из лучших RPG всех времён с богатым миром.",
-    tags: ["Открытый мир", "Фэнтези", "Нарратив"],
-    color: "#d4a843",
-  },
-];
+const GENRES = ["Все", "Экшн", "RPG", "Стратегия", "Инди", "Спорт", "Симулятор", "Хоррор"];
 
 const ICONS: Record<string, string> = {
   "Все": "Gamepad2",
@@ -107,20 +16,43 @@ const ICONS: Record<string, string> = {
   "Хоррор": "Skull",
 };
 
+interface Game {
+  id: number;
+  title: string;
+  genre: string;
+  year: number;
+  rating: number;
+  description: string;
+  tags: string[];
+  color: string;
+}
+
 export default function Index() {
+  const [games, setGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeGenre, setActiveGenre] = useState("Все");
 
+  useEffect(() => {
+    fetch(API)
+      .then((r) => r.json())
+      .then((data) => {
+        const parsed = typeof data === "string" ? JSON.parse(data) : data;
+        setGames(Array.isArray(parsed) ? parsed : []);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   const filtered = useMemo(() => {
-    return GAMES.filter((g) => {
+    return games.filter((g) => {
       const matchesSearch =
         g.title.toLowerCase().includes(search.toLowerCase()) ||
         g.genre.toLowerCase().includes(search.toLowerCase()) ||
-        g.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
+        (g.tags || []).some((t) => t.toLowerCase().includes(search.toLowerCase()));
       const matchesGenre = activeGenre === "Все" || g.genre === activeGenre;
       return matchesSearch && matchesGenre;
     });
-  }, [search, activeGenre]);
+  }, [search, activeGenre, games]);
 
   return (
     <div className="min-h-screen bg-background noise-bg">
@@ -140,9 +72,12 @@ export default function Index() {
             <a href="#" className="hover:text-primary transition-colors">Новинки</a>
             <a href="#" className="hover:text-primary transition-colors">Топ-100</a>
           </nav>
-          <button className="text-sm bg-primary text-primary-foreground px-4 py-2 font-display font-medium tracking-wide uppercase hover:bg-primary/80 transition-colors rounded-sm">
-            Войти
-          </button>
+          <a
+            href="/admin"
+            className="text-sm bg-primary text-primary-foreground px-4 py-2 font-display font-medium tracking-wide uppercase hover:bg-primary/80 transition-colors rounded-sm"
+          >
+            Управление
+          </a>
         </div>
       </header>
 
@@ -161,7 +96,9 @@ export default function Index() {
             игру
           </h1>
           <p className="text-muted-foreground text-lg max-w-md mb-10 leading-relaxed">
-            {GAMES.length} игр в каталоге. Поиск по названию, жанру или тегам — мгновенно.
+            {loading
+              ? "Загружаем каталог..."
+              : `${games.length} ${games.length === 1 ? "игра" : games.length < 5 ? "игры" : "игр"} в каталоге. Поиск по названию, жанру или тегам — мгновенно.`}
           </p>
         </div>
 
@@ -212,16 +149,31 @@ export default function Index() {
 
       {/* Results count */}
       <section className="max-w-7xl mx-auto px-6 mb-6">
-        <p className="text-muted-foreground text-sm">
-          {filtered.length === 0
-            ? "Ничего не найдено"
-            : `Найдено: ${filtered.length} ${filtered.length === 1 ? "игра" : filtered.length < 5 ? "игры" : "игр"}`}
-        </p>
+        {!loading && (
+          <p className="text-muted-foreground text-sm">
+            {filtered.length === 0
+              ? "Ничего не найдено"
+              : `Найдено: ${filtered.length} ${filtered.length === 1 ? "игра" : filtered.length < 5 ? "игры" : "игр"}`}
+          </p>
+        )}
       </section>
 
       {/* Games grid */}
       <section className="max-w-7xl mx-auto px-6 pb-24">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-32 gap-3 text-muted-foreground">
+            <Icon name="Loader2" size={32} className="animate-spin" />
+            <span>Загружаем игры...</span>
+          </div>
+        ) : filtered.length === 0 && games.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-32 gap-4 border border-dashed border-border rounded-sm animate-fade-in">
+            <Icon name="Gamepad2" size={48} className="text-muted-foreground" />
+            <p className="text-muted-foreground text-lg">Каталог пуст</p>
+            <a href="/admin" className="text-primary underline underline-offset-4 text-sm">
+              Добавить первую игру →
+            </a>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 gap-4 animate-fade-in-fast">
             <Icon name="SearchX" size={48} className="text-muted-foreground" />
             <p className="text-muted-foreground text-lg">По запросу «{search}» ничего не найдено</p>
@@ -257,23 +209,16 @@ export default function Index() {
   );
 }
 
-function GameCard({ game, index }: { game: typeof GAMES[0]; index: number }) {
+function GameCard({ game, index }: { game: Game; index: number }) {
   return (
     <div
       className={`card-hover animate-fade-in bg-card border border-border rounded-sm overflow-hidden cursor-pointer stagger-${Math.min(index + 1, 6)}`}
     >
-      {/* Color band */}
-      <div
-        className="h-1 w-full"
-        style={{ background: game.color }}
-      />
-      
-      {/* Placeholder visual */}
+      <div className="h-1 w-full" style={{ background: game.color }} />
+
       <div
         className="h-48 w-full flex items-center justify-center relative overflow-hidden"
-        style={{
-          background: `linear-gradient(135deg, ${game.color}22 0%, ${game.color}08 100%)`,
-        }}
+        style={{ background: `linear-gradient(135deg, ${game.color}22 0%, ${game.color}08 100%)` }}
       >
         <span
           className="font-display text-8xl font-bold uppercase opacity-10 select-none"
@@ -283,17 +228,12 @@ function GameCard({ game, index }: { game: typeof GAMES[0]; index: number }) {
         </span>
         <div
           className="absolute top-4 right-4 text-xs font-display font-medium tracking-widest uppercase px-3 py-1 rounded-sm border"
-          style={{
-            color: game.color,
-            borderColor: `${game.color}44`,
-            background: `${game.color}11`,
-          }}
+          style={{ color: game.color, borderColor: `${game.color}44`, background: `${game.color}11` }}
         >
           {game.genre}
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-5">
         <div className="flex items-start justify-between mb-2">
           <h3 className="font-display text-xl font-bold text-foreground uppercase tracking-wide leading-tight">
@@ -308,11 +248,8 @@ function GameCard({ game, index }: { game: typeof GAMES[0]; index: number }) {
         <p className="text-muted-foreground text-sm leading-relaxed mb-4">{game.description}</p>
 
         <div className="flex flex-wrap gap-1.5 mb-5">
-          {game.tags.map((tag) => (
-            <span
-              key={tag}
-              className="text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded-sm font-medium"
-            >
+          {(game.tags || []).map((tag) => (
+            <span key={tag} className="text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded-sm font-medium">
               {tag}
             </span>
           ))}
